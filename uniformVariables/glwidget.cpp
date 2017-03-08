@@ -8,6 +8,10 @@
 GLWidget::GLWidget(QWidget *parent)
     : QGLWidget(parent)
 {
+    timer = new QTimer;
+    timer->start(10);
+    connect(timer, SIGNAL(timeout()), this, SLOT(repaint()));
+    scale = 0.0f;
 }
 
 GLWidget::~GLWidget()
@@ -22,14 +26,14 @@ void GLWidget::initializeGL()
         {0.866f, -0.5f, 0.0f}, {-0.866f, -0.5f, 0.0f}, {0.0f, 1.0f, 0.0f}};
     std::string vertexshader;
     std::string fragshader;
-    std::ifstream file1("../createShader/vertexshader.vsh");
+    std::ifstream file1("../uniformVariables/vertexshader.vsh");
     std::string temp;
     while(std::getline(file1, temp))
     {
         vertexshader += temp + "\n";
     }
     file1.close();
-    std::ifstream file2("../createShader/fragshader.frag");
+    std::ifstream file2("../uniformVariables/fragshader.frag");
     while(std::getline(file2,temp))
     {
         fragshader += temp + "\n";
@@ -53,6 +57,9 @@ void GLWidget::initializeGL()
     GLuint shaderProgram = glCreateProgram();
     addShader(shaderProgram, vertexshader.c_str(), vertexshader.size(), GL_VERTEX_SHADER);
     addShader(shaderProgram, fragshader.c_str(), fragshader.size(), GL_FRAGMENT_SHADER);
+
+    //get location
+    gScaleLocation = glGetUniformLocation(shaderProgram, "gScale");
 }
 
 void GLWidget::resizeGL(int width, int height)
@@ -94,4 +101,11 @@ void GLWidget::addShader(GLuint shaderProgram, const char* shaderText, const int
     }
     glValidateProgram(shaderProgram);
     glUseProgram(shaderProgram);
+}
+
+void GLWidget::repaint()
+{
+    scale += 0.01f;
+    glUniform1f(gScaleLocation, sinf(scale));
+    update();
 }
